@@ -5,12 +5,15 @@ using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.Owin.Security;
 using MvcMusicStore.Models;
+using MyLogger;
 
 namespace MvcMusicStore.Controllers
 {
     [Authorize]
     public class AccountController : Controller
     {
+        private readonly ILogger logger;
+
         public enum ManageMessageId
         {
             ChangePasswordSuccess,
@@ -23,14 +26,18 @@ namespace MvcMusicStore.Controllers
 
         private UserManager<ApplicationUser> _userManager;
 
-        public AccountController()
-            : this(new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(new ApplicationDbContext())))
+        public AccountController(/*CounterHelper<ControllersCounters> counterHelper,*/ ILogger logger)
+            : this(/*counterHelper,*/ logger,
+                new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(new ApplicationDbContext())))
         {
+
         }
 
-        public AccountController(UserManager<ApplicationUser> userManager)
+        public AccountController(ILogger logger, UserManager<ApplicationUser> userManager)
         {
+            this.logger = logger;
             _userManager = userManager;
+            logger.Info("AccountController created");
         }
 
         private IAuthenticationManager AuthenticationManager
@@ -65,19 +72,21 @@ namespace MvcMusicStore.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Login(LoginViewModel model, string returnUrl)
         {
+            logger.Info("AccountController Login Post method started");
             if (ModelState.IsValid)
             {
                 var user = await _userManager.FindAsync(model.UserName, model.Password);
                 if (user != null)
                 {
+                    logger.Debug($"Founded user {user.UserName}");
                     await SignInAsync(user, model.RememberMe);
-
                     return RedirectToLocal(returnUrl);
                 }
 
                 ModelState.AddModelError("", "Invalid username or password.");
             }
 
+            logger.Info("AccountController Login Post method finished");
             return View(model);
         }
 
