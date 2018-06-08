@@ -6,12 +6,15 @@ using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.Owin.Security;
 using MvcMusicStore.Models;
 using MyLogger;
+using PerformanceCounterHelper;
+using MvcMusicStore.PerformanceCounters;
 
 namespace MvcMusicStore.Controllers
 {
     [Authorize]
     public class AccountController : Controller
     {
+        private readonly CounterHelper<CustomeCounters> counterHelper;
         private readonly ILogger logger;
 
         public enum ManageMessageId
@@ -26,15 +29,16 @@ namespace MvcMusicStore.Controllers
 
         private UserManager<ApplicationUser> _userManager;
 
-        public AccountController(/*CounterHelper<ControllersCounters> counterHelper,*/ ILogger logger)
-            : this(/*counterHelper,*/ logger,
+        public AccountController(CounterHelper<CustomeCounters> counterHelper, ILogger logger)
+            : this(counterHelper, logger,
                 new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(new ApplicationDbContext())))
         {
 
         }
 
-        public AccountController(ILogger logger, UserManager<ApplicationUser> userManager)
+        public AccountController(CounterHelper<CustomeCounters> counterHelper, ILogger logger, UserManager<ApplicationUser> userManager)
         {
+            this.counterHelper = counterHelper;
             this.logger = logger;
             _userManager = userManager;
             logger.Info("AccountController created");
@@ -80,6 +84,7 @@ namespace MvcMusicStore.Controllers
                 {
                     logger.Debug($"Founded user {user.UserName}");
                     await SignInAsync(user, model.RememberMe);
+                    this.counterHelper.Increment(CustomeCounters.SuccessLogInsCounter);
                     return RedirectToLocal(returnUrl);
                 }
 
@@ -327,7 +332,7 @@ namespace MvcMusicStore.Controllers
         public ActionResult LogOff()
         {
             AuthenticationManager.SignOut();
-
+            this.counterHelper.Increment(CustomeCounters.SuccessLogOffsCounter);
             return RedirectToAction("Index", "Home");
         }
 

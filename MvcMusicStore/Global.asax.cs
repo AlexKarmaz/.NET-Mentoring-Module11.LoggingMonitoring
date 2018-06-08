@@ -6,6 +6,7 @@ using MyLogger;
 using Autofac;
 using Autofac.Integration.Mvc;
 using MvcMusicStore.App_Start;
+using MvcMusicStore.PerformanceCounters;
 
 namespace MvcMusicStore
 {
@@ -18,7 +19,7 @@ namespace MvcMusicStore
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
-            //PerformanceCountersConfig.ConfigureCounters();
+            PerformanceCountersConfig.ConfigureCounters();
         }
 
         protected void Application_Error(object sender, EventArgs e)
